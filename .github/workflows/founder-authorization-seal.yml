@@ -1,0 +1,99 @@
+name: VIONA Founder Authorization Seal V1
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repository:
+        description: Exact allowlisted authorization subject repository
+        required: true
+        type: choice
+        options:
+          - laoton80-del/Ket-noi-eu
+      target_pr_number:
+        description: Open pull request number to derive from the live target API
+        required: true
+        type: string
+      freeze_scope:
+        description: Exact canonical freeze exception
+        required: true
+        type: choice
+        options:
+          - FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY
+          - FREEZE_EXCEPTION_FOR_PR459_OPERATING_PROTOCOL_V2_CANONICAL_PROMOTION_ONLY
+      merge_mode:
+        description: Authorized merge mode
+        required: true
+        type: choice
+        options:
+          - squash
+      authorization_provenance:
+        description: Fixed Founder authorization provenance
+        required: true
+        type: choice
+        options:
+          - FOUNDER_MANUAL_WORKFLOW_DISPATCH_V1
+
+permissions:
+  contents: read
+  pull-requests: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: founder-seal-v1-${{ github.repository_id }}-${{ inputs.target_pr_number }}
+  cancel-in-progress: false
+
+jobs:
+  issue_seal:
+    name: Derive and attest immutable Founder authority facts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INPUT_TARGET_REPOSITORY: ${{ inputs.target_repository }}
+      INPUT_TARGET_PR_NUMBER: ${{ inputs.target_pr_number }}
+      INPUT_FREEZE_SCOPE: ${{ inputs.freeze_scope }}
+      INPUT_MERGE_MODE: ${{ inputs.merge_mode }}
+      INPUT_AUTHORIZATION_PROVENANCE: ${{ inputs.authorization_provenance }}
+      SEAL_OUTPUT_DIR: out
+    steps:
+      - name: Check out the exact trusted workflow commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Install the fixed Node.js runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          check-latest: false
+
+      - name: Verify the issuer implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/founder-authorization-seal.mjs
+          node --check scripts/test-founder-authorization-seal.mjs
+          node --test scripts/test-founder-authorization-seal.mjs
+
+      - name: Derive the seal from the allowlisted public target
+        id: seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/founder-authorization-seal.mjs issue
+
+      - name: Attest the exact seal bundle files
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: out/*
+
+      - name: Upload the attested seal bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.seal.outputs.artifact_name }}
+          path: out/*
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
