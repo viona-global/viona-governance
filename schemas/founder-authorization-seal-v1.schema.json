@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/viona-global/viona-governance/schemas/founder-authorization-seal-v1.schema.json",
+  "title": "VIONA Founder Authorization Seal V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seal_type",
+    "issuer",
+    "issuer_repository",
+    "issuer_repository_id",
+    "issuer_workflow_path",
+    "issuer_workflow_commit_sha",
+    "issuer_workflow_run_id",
+    "issuer_workflow_run_attempt",
+    "issuer_actor",
+    "issued_at",
+    "target_repository",
+    "target_repository_id",
+    "target_repository_node_id",
+    "target_pr_number",
+    "target_pr_head_sha",
+    "target_pr_head_branch",
+    "target_base_branch",
+    "merge_mode",
+    "freeze_scope",
+    "changed_file_count",
+    "changed_path_set_digest",
+    "reviewed_scope_digest",
+    "payload_digest",
+    "authorization_provenance",
+    "seal_nonce_or_unique_identifier",
+    "artifact_name",
+    "artifact_sha256",
+    "attestation_expected"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "viona.founder-authorization-seal/v1"
+    },
+    "seal_type": {
+      "const": "FOUNDER_AUTHORIZATION_SEAL"
+    },
+    "issuer": {
+      "const": "VIONA_FOUNDER_AUTHORIZATION_SEAL_WORKFLOW_V1"
+    },
+    "issuer_repository": {
+      "const": "viona-global/viona-governance"
+    },
+    "issuer_repository_id": {
+      "const": 1370004364
+    },
+    "issuer_workflow_path": {
+      "const": ".github/workflows/founder-authorization-seal.yml"
+    },
+    "issuer_workflow_commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "issuer_workflow_run_id": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "issuer_workflow_run_attempt": {
+      "const": 1
+    },
+    "issuer_actor": {
+      "const": "laoton80-del"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "target_repository": {
+      "const": "laoton80-del/Ket-noi-eu"
+    },
+    "target_repository_id": {
+      "const": 1213874552
+    },
+    "target_repository_node_id": {
+      "const": "R_kgDOSFpBeA"
+    },
+    "target_pr_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "target_pr_head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "target_pr_head_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_base_branch": {
+      "const": "master"
+    },
+    "merge_mode": {
+      "const": "squash"
+    },
+    "freeze_scope": {
+      "enum": [
+        "FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY",
+        "FREEZE_EXCEPTION_FOR_PR459_OPERATING_PROTOCOL_V2_CANONICAL_PROMOTION_ONLY"
+      ]
+    },
+    "changed_file_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "changed_path_set_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "reviewed_scope_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "payload_digest": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      ]
+    },
+    "authorization_provenance": {
+      "const": "FOUNDER_MANUAL_WORKFLOW_DISPATCH_V1"
+    },
+    "seal_nonce_or_unique_identifier": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_name": {
+      "type": "string",
+      "pattern": "^founder-seal-v1-pr-[1-9][0-9]*-[0-9a-f]{12}-run-[1-9][0-9]*$"
+    },
+    "artifact_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the canonical UTF-8 seal body with artifact_sha256 omitted; the sidecar separately hashes the exact final JSON bytes."
+    },
+    "attestation_expected": {
+      "const": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "freeze_scope": {
+            "const": "FREEZE_EXCEPTION_FOR_PR459_OPERATING_PROTOCOL_V2_CANONICAL_PROMOTION_ONLY"
+          }
+        },
+        "required": [
+          "freeze_scope"
+        ]
+      },
+      "then": {
+        "properties": {
+          "target_pr_number": {
+            "const": 459
+          },
+          "target_pr_head_branch": {
+            "const": "docs/viona-operating-protocol-v2-canonical-promotion"
+          },
+          "changed_file_count": {
+            "const": 7
+          },
+          "payload_digest": {
+            "const": "6a7e59d1b2948f16999bff53e4f855d93f6931df53a220a5fb374044328f9944"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "payload_digest": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}
